@@ -1,0 +1,13 @@
+{
+  "name": "WHOA-bot",
+  "version": "1.0.0",
+  "description": "A custom bot WHOAAAAAAH WHOAH WHOA",
+  "main": "bot.py",
+  "repository": "git@github.com:LolnationCH/discord-bots.git",
+  "author": "LolnationCH",
+  "license": "MIT",
+  "dependencies": {
+    "discord.io": "^2.5.1",
+    "winston": "^2.3.1"
+  }
+}
