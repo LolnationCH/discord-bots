@@ -35,6 +35,10 @@ async def on_message(message):
         bf.save_files(stats_count, quotes)
         return
 
+    msg = bf.formatted_correctly(message)
+    if msg != '':
+        await client.send_message(message.channel, msg)
+
     # Stats stuff
     if message.author.mention not in stats_count:
         stats_count[message.author.mention] = 0

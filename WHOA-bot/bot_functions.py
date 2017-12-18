@@ -2,19 +2,25 @@
 import os.path
 import json
 import pickle
-import msgpack
 from math import ceil
 import random
 
+import msgpack
 from weather import Weather
 
 # CONSTANTS
 AUTH = r"ressource\auth.json"
 STATS_F = r"ressource\stats.p"
 QUOTES_F = r"ressource\quotes.msgpack"
+INSULTS_F = r"ressource\insults.json"
+COMMAND_PREFIX = 'WHOA'
 #
 
 weather = Weather()
+insults = [" is stupid."]
+with open(INSULTS_F, 'r') as f:
+    insults = json.load(f)['insults']
+l_insults = len(insults)
 
 
 def save_files(stats, quotes):
@@ -38,8 +44,8 @@ def load_files():
 
 def is_command(msg):
     """Parse to see if command."""
-    if msg.startswith('WHOAH'):
-        return (True, msg[6:])
+    if msg.lower().startswith(COMMAND_PREFIX):
+        return (True, msg[len(COMMAND_PREFIX) + 1:])
     return (False, msg)
 
 
@@ -140,14 +146,48 @@ def parse_commands(msg, message_obj, stats_count, quotes):
 def add_quotes(msg, author, quotes):
     """Add quotes."""
     index = len(quotes)
-    quotes[index] = (msg, author)
+    quotes[index] = {b'quote': msg, b'author': author}
 
 
 def show_quote(quotes):
     """Show quotes."""
     ind = random.randrange(0, len(quotes))
-    return quotes[ind][0] + '\n\t- ' + quotes[ind][1]
+    return str(quotes[ind][b'quote'])[2:-1] + '\n\t- ' + str(quotes[ind][b'author'])[2:-1]
 
 
-def formatted_correctly(msg):
+def formatted_correctly(message):
     """."""
+    bracket_open = ['{', '[', '(', '"""', '"', '/*', '<']
+    bracket_close = ['}', ']', ')', '"""', '"', '*/', '>']
+    lst_state = []
+    msg = message.content
+
+    ind = 0
+    max_l = len(msg)
+    while ind < max_l:
+        cond = True
+        for ch in bracket_open:
+            if msg[ind:ind + len(ch)] == ch:
+                lst_state.append(bracket_open.index(ch))
+                ind += len(ch)
+                cond = False
+                break
+
+        if lst_state:
+            ch = bracket_close[lst_state[-1]]
+            char_msg = msg[ind:ind + len(ch)]
+            if char_msg in bracket_close:
+                if msg[ind:ind + len(ch)] != ch:
+                    return message.author.mention +\
+                        insults[random.randrange(0, l_insults * 1000) % l_insults]
+                del lst_state[-1]
+                ind += len(ch)
+                cond = False
+                continue
+
+        if cond:
+            # Normal character
+            ind += 1
+
+    lst_state.reverse()
+    return "".join([bracket_close[x] for x in lst_state])
