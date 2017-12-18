@@ -2,29 +2,38 @@
 import os.path
 import json
 import pickle
+import msgpack
 from math import ceil
 import random
 
 from weather import Weather
 
 # CONSTANTS
-AUTH = "auth.json"
-STATS_F = "stats.p"
+AUTH = r"ressource\auth.json"
+STATS_F = r"ressource\stats.p"
+QUOTES_F = r"ressource\quotes.msgpack"
 #
 
 weather = Weather()
 
 
-def save_stats(stats):
-    """Save stats."""
+def save_files(stats, quotes):
+    """Save files."""
     pickle.dump(stats, open(STATS_F, "wb"))
+    msgpack.dump(quotes, open(QUOTES_F, "wb"))
 
 
-def load_stats():
-    """Save stats."""
+def load_files():
+    """Load files."""
     if os.path.isfile(STATS_F):
-        return pickle.load(open(STATS_F, "rb"))
-    return {}
+        n_dic = pickle.load(open(STATS_F, "rb"))
+    else:
+        n_dic = {}
+    if os.path.isfile(QUOTES_F):
+        n_dic2 = msgpack.load(open(QUOTES_F, "rb"))
+    else:
+        n_dic2 = {}
+    return n_dic, n_dic2
 
 
 def is_command(msg):
@@ -92,3 +101,53 @@ def make_help_msg():
 def generate_whoah():
     """:)."""
     return 'WHOAH ' * random.randrange(0, 50)
+
+
+def parse_commands(msg, message_obj, stats_count, quotes):
+    """Function that parse the command and send a response if needed."""
+    if msg.find('hello') == 0:
+        return 'Hello {0.author.mention}'.format(message_obj)
+
+    if msg.find('repeat') == 0:
+        return msg[len('repeat'):]
+
+    if msg.find('stats_perc') == 0:
+        return make_str_stats_perc(stats_count)
+
+    if msg.find('stats') == 0:
+        return make_str_stats(stats_count)
+
+    if msg.find('weather') == 0:
+        return get_wheater_condition(msg)
+
+    if msg.find('fortune') == 0:
+        return 'Not implemented yet'
+
+    if msg.find('addquote') == 0:
+        n_msg = msg[len('addquotes'):]
+        n_msg = n_msg.split(" *** ", 1)
+        add_quotes(n_msg[0], n_msg[1], quotes)
+        return ''
+    if msg.find('quote') == 0:
+        return show_quote(quotes)
+
+    if msg.find('help') == 0:
+        return make_help_msg()
+
+    return generate_whoah()
+
+
+def add_quotes(msg, author, quotes):
+    """Add quotes."""
+    index = len(quotes)
+    quotes[index] = (msg, author)
+
+
+def show_quote(quotes):
+    """Show quotes."""
+    ind = random.randrange(0, len(quotes))
+    return quotes[ind][0] + '\n\t- ' + quotes[ind][1]
+
+
+def formatted_correctly(msg):
+    """."""

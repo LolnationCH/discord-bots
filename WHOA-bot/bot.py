@@ -8,15 +8,17 @@ import bot_functions as bf
 STATS_F = "stats.p"
 #
 
+stats_count, quotes = bf.load_files()
+
 
 def exit_handler():
     """Handle exit."""
-    bf.save_stats(stats_count)
+    bf.save_files(stats_count, quotes)
 
 
-stats_count = bf.load_stats()
 atexit.register(exit_handler)
 client = discord.Client()
+
 
 @client.event
 async def on_message(message):
@@ -27,38 +29,17 @@ async def on_message(message):
 
     msg_tup = bf.is_command(message.content)
     if msg_tup[0]:
-        if msg_tup[1].find('hello') == 0:
-            msg = 'Hello {0.author.mention}'.format(message)
+        msg = bf.parse_commands(msg_tup[1], message, stats_count, quotes)
+        if msg != '':
             await client.send_message(message.channel, msg)
+        bf.save_files(stats_count, quotes)
+        return
 
-        elif msg_tup[1].find('repeat') == 0:
-            msg = msg_tup[1][len('repeat'):]
-            await client.send_message(message.channel, msg)
-
-        elif msg_tup[1].find('stats_perc') == 0:
-            await client.send_message(message.channel, bf.make_str_stats_perc(stats_count))
-
-        elif msg_tup[1].find('stats') == 0:
-            await client.send_message(message.channel, bf.make_str_stats(stats_count))
-
-        elif msg_tup[1].find('weather') == 0:
-            await client.send_message(message.channel, bf.get_wheater_condition(msg_tup[1]))
-
-        elif msg_tup[1].find('fortune') == 0:
-            await client.send_message(message.channel, 'Not implemented yet')
-
-        elif msg_tup[1].find('help') == 0:
-            await client.send_message(message.channel, bf.make_help_msg())
-
-        else:
-            await client.send_message(message.channel, bf.generate_whoah())
-
-    else:
-        # Stats stuff
-        if message.author.mention not in stats_count:
-            stats_count[message.author.mention] = 0
-        stats_count[message.author.mention] += 1
-        bf.save_stats(stats_count)
+    # Stats stuff
+    if message.author.mention not in stats_count:
+        stats_count[message.author.mention] = 0
+    stats_count[message.author.mention] += 1
+    bf.save_files(stats_count, quotes)
 
 
 @client.event
