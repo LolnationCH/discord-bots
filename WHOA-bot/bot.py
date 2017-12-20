@@ -1,7 +1,6 @@
 """WHOAH bot script."""
 import atexit
 import discord
-
 import bot_functions as bf
 
 # CONSTANTS
@@ -29,9 +28,16 @@ async def on_message(message):
 
     msg_tup = bf.is_command(message.content)
     if msg_tup[0]:
-        msg = bf.parse_commands(msg_tup[1], message, stats_count, quotes)
-        if msg != '':
+        if msg_tup[1].find('invite') == 0:
+            invite = await client.create_invite(message.channel, max_age=15)
+            await client.send_message(message.channel, invite)
+            return
+
+        val, msg = bf.parse_commands(msg_tup[1], message, client, stats_count, quotes)
+        if msg != '' and val == 'message':
             await client.send_message(message.channel, msg)
+        elif val == 'file':
+            await client.send_file(message.channel, msg)
         bf.save_files(stats_count, quotes)
         return
 
@@ -53,5 +59,6 @@ async def on_ready():
     print(client.user.name)
     print(client.user.id)
     print('------')
+
 
 client.run(bf.get_token())

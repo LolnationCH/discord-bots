@@ -1,9 +1,11 @@
 """Functions for the bot."""
+from os import walk
 import os.path
 import json
 import pickle
 from math import ceil
 import random
+from PyDictionary import PyDictionary
 
 import msgpack
 from weather import Weather
@@ -13,10 +15,13 @@ AUTH = r"ressource\auth.json"
 STATS_F = r"ressource\stats.p"
 QUOTES_F = r"ressource\quotes.msgpack"
 INSULTS_F = r"ressource\insults.json"
+MEMES_F = r"ressource\memes"
+INTERNET_MEME_F = r"ressource\memes\internet.json"
 COMMAND_PREFIX = 'WHOA'
 #
 
 weather = Weather()
+
 insults = [" is stupid."]
 with open(INSULTS_F, 'r') as f:
     insults = json.load(f)['insults']
@@ -44,7 +49,7 @@ def load_files():
 
 def is_command(msg):
     """Parse to see if command."""
-    if msg.lower().startswith(COMMAND_PREFIX):
+    if msg.upper().startswith(COMMAND_PREFIX):
         return (True, msg[len(COMMAND_PREFIX) + 1:])
     return (False, msg)
 
@@ -109,39 +114,61 @@ def generate_whoah():
     return 'WHOAH ' * random.randrange(0, 50)
 
 
-def parse_commands(msg, message_obj, stats_count, quotes):
+def parse_commands(msg, message_obj, client_obj, stats_count, quotes):
     """Function that parse the command and send a response if needed."""
     if msg.find('hello') == 0:
-        return 'Hello {0.author.mention}'.format(message_obj)
+        return ('message', 'Hello {0.author.mention}'.format(message_obj))
 
     if msg.find('repeat') == 0:
-        return msg[len('repeat'):]
+        return ('message', msg[len('repeat'):])
 
     if msg.find('stats_perc') == 0:
-        return make_str_stats_perc(stats_count)
+        return ('message', make_str_stats_perc(stats_count))
 
     if msg.find('stats') == 0:
-        return make_str_stats(stats_count)
+        return ('message', make_str_stats(stats_count))
 
     if msg.find('weather') == 0:
-        return get_wheater_condition(msg)
+        return ('message', get_wheater_condition(msg))
 
     if msg.find('fortune') == 0:
-        return 'Not implemented yet'
+        return ('message', 'Not implemented yet')
+
+    if msg.find('dictionary') == 0:
+        return ('message', search_dictionnary(msg))
 
     if msg.find('addquote') == 0:
         n_msg = msg[len('addquotes'):]
         n_msg = n_msg.split(" *** ", 1)
         add_quotes(n_msg[0], n_msg[1], quotes)
-        return ''
+        return ('message', '')
+
     if msg.find('quote') == 0:
-        return show_quote(quotes)
+        return ('message', show_quote(quotes))
 
     if msg.find('help') == 0:
-        return make_help_msg()
+        return ('message', make_help_msg())
 
-    return generate_whoah()
+    if msg.find('meme') == 0:
+        return get_meme_path()
 
+    return ('message', generate_whoah())
+
+
+def search_dictionnary(msg):
+    """Get word meaning, synonym, antonym and translation."""
+    lt_w = msg.split(' ')
+    dictionary = PyDictionary(lt_w[-1])
+    stre = lt_w[-1]
+    if 'meaning' in lt_w:
+        stre += '\n' + str(dictionary.getMeanings()[lt_w[-1]])
+    if 'synonym' in lt_w:
+        stre += '\n' + str(dictionary.getSynonyms()[0][lt_w[-1]])
+    if 'antonym' in lt_w:
+        stre += '\n' + str(dictionary.getAntonyms()[0][lt_w[-1]])
+    if 'translate' in lt_w:
+        stre += '\n' + dictionary.translateTo(lt_w[lt_w.index('translate') + 1])[0]
+    return stre
 
 def add_quotes(msg, author, quotes):
     """Add quotes."""
@@ -153,6 +180,20 @@ def show_quote(quotes):
     """Show quotes."""
     ind = random.randrange(0, len(quotes))
     return str(quotes[ind][b'quote'])[2:-1] + '\n\t- ' + str(quotes[ind][b'author'])[2:-1]
+
+
+def get_meme_path():
+    """."""
+    files = []
+    if random.randrange(0, 2) == 0:
+        for (_, _, filenames) in walk(MEMES_F):
+            files.extend(filenames)
+            break
+    if not files:
+        with open(INTERNET_MEME_F, 'r') as fi:
+            files = json.load(fi)
+            return ('message', files[random.randrange(0, len(files))])
+    return ('file', MEMES_F + '\\' + files[random.randrange(0, len(files))])
 
 
 def formatted_correctly(message):
