@@ -70,10 +70,10 @@ def parse_commands(msg, message_obj, client_obj, stats_obj):
         return ('message', msg[len('repeat'):])
 
     if msg.find('stats_perc') == 0:
-        return ('message', stats_obj.str_stats_perc())
+        return ('message', stats_obj.str_stats_perc(message_obj.server.id))
 
     if msg.find('stats') == 0:
-        return ('message', stats_obj.str_stats())
+        return ('message', stats_obj.str_stats(message_obj.server.id))
 
     if msg.find('weather') == 0:
         return ('message', get_wheater_condition(msg))
@@ -82,7 +82,7 @@ def parse_commands(msg, message_obj, client_obj, stats_obj):
         return ('message', 'Not implemented yet')
 
     if msg.find('dictionary') == 0:
-        return ('message', search_dictionnary(msg))
+        return ('message', search_dictionary(msg))
 
     if msg.find('addquote') == 0:
         n_msg = msg[len('addquotes'):]
@@ -102,7 +102,7 @@ def parse_commands(msg, message_obj, client_obj, stats_obj):
     return ('message', generate_whoah())
 
 
-def search_dictionnary(msg):
+def search_dictionary(msg):
     """Get word meaning, synonym, antonym and translation."""
     lt_w = msg.split(' ')
     dictionary = PyDictionary(lt_w[-1])

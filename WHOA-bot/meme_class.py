@@ -7,8 +7,8 @@ from os import walk
 class Meme(object):
     """Class for getting memes."""
 
-    MEMES_F = r"ressource//memes"
-    INTERNET_MEME_F = r"ressource//memes//internet.json"
+    MEMES_F = r"ressource/memes"
+    INTERNET_MEME_F = r"ressource/memes/internet.json"
 
     def __init__(self):
         """."""

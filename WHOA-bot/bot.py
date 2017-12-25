@@ -35,7 +35,7 @@ async def on_message(message):
     if msg != '':
         await client.send_message(message.channel, msg)
 
-    stats.add(message.author.mention)
+    stats_obj.add(message.server.id, message.author.mention)
 
 
 @client.event

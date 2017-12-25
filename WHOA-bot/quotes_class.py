@@ -2,6 +2,7 @@
 
 import os
 import msgpack
+import random
 
 class Quotes(object):
     """Class to manipulate addition and showing of quotes."""
@@ -27,8 +28,7 @@ class Quotes(object):
     
     def add(self, msg, author):
         """Add quotes."""
-        index = len(self.quotes)
-        self.quotes[index] = {b'quote': msg, b'author': author}
+        self.quotes.append({b'quote': msg, b'author': author})
         self.save()
     
     
