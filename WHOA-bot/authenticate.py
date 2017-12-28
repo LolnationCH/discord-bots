@@ -2,6 +2,7 @@
 import json
 
 
+RESPONSE_TYPE = {'NONE': -1, 'INVITE': 0, 'MESSAGE': 1, 'FILE': 2}
 AUTH = r"ressource//auth.json"
 
 

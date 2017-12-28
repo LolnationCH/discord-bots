@@ -1,29 +1,43 @@
 """Functions for the bot."""
-import os
-import json
 from math import ceil
 import random
+
 from PyDictionary import PyDictionary
-
 from weather import Weather
-from meme_class import Meme
-from quotes_class import Quotes
-from insults_class import Insults
 
-# CONSTANTS
-COMMAND_PREFIX = 'WHOA'
-#
+from meme_class import Meme
+from authenticate import RESPONSE_TYPE
+from quotes_class import Quotes
+
 
 weather = Weather()
 meme = Meme()
 quotes_obj = Quotes()
-insults = Insults()
 
-def is_command(msg):
-    """Parse to see if command."""
-    if msg.upper().startswith(COMMAND_PREFIX):
-        return (True, msg[len(COMMAND_PREFIX) + 1:])
-    return (False, msg)
+
+def generate_whoah():
+    """:)."""
+    return 'WHOAH ' * random.randrange(0, 50)
+
+
+def make_help_msg():
+    """."""
+    return RESPONSE_TYPE['MESSAGE'],\
+        'Commands list : \n' +\
+        'addquote : add a quote to the quote database. Format : msg *** author\n' +\
+        'dictionary : Search for word. Usage :' +\
+        '[meaning] [antonym] [synonym] [translate {language shortcut}] word\n' +\
+        'fortune : display fortune\n' +\
+        'hello : display a hello msg to the auhtor\n' +\
+        'help : display this message\n' +\
+        'invite : returns a invite for this server\n' +\
+        'meme : display a random meme from server or the net\n' +\
+        'quote : display a random quote from database\n' +\
+        'repeat : display the message said after "repeat"\n' +\
+        'stats : display total of messages sent by user\n' +\
+        'stats_perc : display percentage of messages sent by user\n' +\
+        'weather : diplay weather for location, default:sherbrooke\n' +\
+        '<nothing> : Try it :)'
 
 
 def _farenheit_to_celcius_(faren):
@@ -39,67 +53,9 @@ def get_wheater_condition(msg):
     else:
         location = weather.lookup_by_location('sherbrooke')
     forecast = location.forecast()[0]
-    return forecast.text() + ' => High : ' + _farenheit_to_celcius_(forecast.high())\
-        + u" \u2103" + ', Low : ' + _farenheit_to_celcius_(forecast.low()) + u" \u2103"
-
-
-def make_help_msg():
-    """."""
-    # TODO update this message
-    return 'Commands list : \n' +\
-        'hello : returns a hello msg to the auhtor\n' +\
-        'repeat : returns the message said after "repeat"\n' +\
-        'stats_perc : returns percentage of messages sent by user\n' +\
-        'stats : returns total of messages sent by user\n' +\
-        'fortune : returns fortune\n' +\
-        'weather : returns weather for location, default:sherbrooke\n' +\
-        '<nothing> : Try it :)'
-
-
-def generate_whoah():
-    """:)."""
-    return 'WHOAH ' * random.randrange(0, 50)
-
-
-def parse_commands(msg, message_obj, client_obj, stats_obj):
-    """Function that parse the command and send a response if needed."""
-    if msg.find('hello') == 0:
-        return ('message', 'Hello {0.author.mention}'.format(message_obj))
-
-    if msg.find('repeat') == 0:
-        return ('message', msg[len('repeat'):])
-
-    if msg.find('stats_perc') == 0:
-        return ('message', stats_obj.str_stats_perc(message_obj.server.id))
-
-    if msg.find('stats') == 0:
-        return ('message', stats_obj.str_stats(message_obj.server.id))
-
-    if msg.find('weather') == 0:
-        return ('message', get_wheater_condition(msg))
-
-    if msg.find('fortune') == 0:
-        return ('message', 'Not implemented yet')
-
-    if msg.find('dictionary') == 0:
-        return ('message', search_dictionary(msg))
-
-    if msg.find('addquote') == 0:
-        n_msg = msg[len('addquotes'):]
-        n_msg = n_msg.split(" *** ", 1)
-        quotes_obj.add(n_msg[0], n_msg[1])
-        return ('message', '')
-
-    if msg.find('quote') == 0:
-        return ('message', quotes_obj.get())
-
-    if msg.find('help') == 0:
-        return ('message', make_help_msg())
-
-    if msg.find('meme') == 0:
-        return meme.get_meme()
-
-    return ('message', generate_whoah())
+    return RESPONSE_TYPE['MESSAGE'], '%s => High : %s \u2103, Low: %s \u2103' %\
+        (forecast.text(), _farenheit_to_celcius_(forecast.high()),
+         _farenheit_to_celcius_(forecast.low()))
 
 
 def search_dictionary(msg):
@@ -115,40 +71,37 @@ def search_dictionary(msg):
         stre += '\n' + str(dictionary.getAntonyms()[0][lt_w[-1]])
     if 'translate' in lt_w:
         stre += '\n' + dictionary.translateTo(lt_w[lt_w.index('translate') + 1])[0]
-    return stre
+    return RESPONSE_TYPE['MESSAGE'], stre
 
-def formatted_correctly(message):
-    """."""
-    bracket_open = ['{', '[', '(', '"""', '"', '/*', '<']
-    bracket_close = ['}', ']', ')', '"""', '"', '*/', '>']
-    lst_state = []
-    msg = message.content
 
-    ind = 0
-    max_l = len(msg)
-    while ind < max_l:
-        cond = True
-        for ch in bracket_open:
-            if msg[ind:ind + len(ch)] == ch:
-                lst_state.append(bracket_open.index(ch))
-                ind += len(ch)
-                cond = False
-                break
+def parse_commands(msg, author):
+    """Function that parse the command and send a response if needed."""
 
-        if lst_state:
-            ch = bracket_close[lst_state[-1]]
-            char_msg = msg[ind:ind + len(ch)]
-            if char_msg in bracket_close:
-                if msg[ind:ind + len(ch)] != ch:
-                    return message.author.mention + insults.get()
-                del lst_state[-1]
-                ind += len(ch)
-                cond = False
-                continue
+    if msg.find('hello') == 0:
+        return RESPONSE_TYPE['MESSAGE'], 'Hello %s' % author
 
-        if cond:
-            # Normal character
-            ind += 1
+    if msg.find('help') == 0:
+        return make_help_msg()
 
-    lst_state.reverse()
-    return "".join([bracket_close[x] for x in lst_state])
+    if msg.find('repeat') == 0:
+        return RESPONSE_TYPE['MESSAGE'], msg[len('repeat'):]
+
+    if msg.find('fortune') == 0:
+        return RESPONSE_TYPE['MESSAGE'], 'Not implemented yet'
+
+    if msg.find('dictionary') == 0:
+        return search_dictionary(msg)
+
+    if msg.find('addquote') == 0:
+        return quotes_obj.add(msg[len('addquotes'):])
+
+    if msg.find('quote') == 0:
+        return quotes_obj.get()
+
+    if msg.find('meme') == 0:
+        return meme.get_meme()
+
+    if msg.find('weather') == 0:
+        return get_wheater_condition(msg)
+
+    return RESPONSE_TYPE['MESSAGE'], generate_whoah()

@@ -3,6 +3,7 @@
 import random
 import json
 from os import walk
+from authenticate import RESPONSE_TYPE
 
 class Meme(object):
     """Class for getting memes."""
@@ -22,7 +23,7 @@ class Meme(object):
 
     def get_meme(self):
         """Return a file or a path to a meme."""
-        if len(self.files_server) != 0 and random.randrange(0, 2) == 0:
-            return ('file', self.MEMES_F + '//' + self.files_server[random.randrange(0, len(self.files_server))])
-        else:
-            return ('message', self.file_net[random.randrange(0, len(self.file_net))])
+        if self.files_server and random.randrange(0, 2) == 0:
+            return (RESPONSE_TYPE['FILE'], '%s//%s' %
+                    (self.MEMES_F, self.files_server[random.randrange(0, len(self.files_server))]))
+        return (RESPONSE_TYPE['MESSAGE'], self.file_net[random.randrange(0, len(self.file_net))])
