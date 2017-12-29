@@ -1,6 +1,5 @@
 """Stats class."""
 
-from os import walk
 import os.path
 import pickle
 
@@ -8,7 +7,7 @@ import pickle
 class Stats_recorder(object):
     """Keep track of the stats for the server."""
 
-    STATS_F = r"ressource//stats"
+    STATS_F = r"ressource//stats.p"
 
     def load(self):
         """Load stats."""
@@ -35,18 +34,18 @@ class Stats_recorder(object):
 
     def str_stats(self, id_server):
         """Make print str."""
-        list_tup = sorted(self.stats[id_server].items(), reverse=True)
+        list_key = sorted(self.stats[id_server], key=self.stats[id_server].get, reverse=True)
         stre = ''
-        for i in range(0, len(list_tup)):
-            stre += str(i + 1) + '. ' + list_tup[i][0] + ' => ' + str(list_tup[i][1])
+        for i in range(0, len(list_key)):
+            stre += '%d. %s => %d\n' % ((i+1), list_key[i], self.stats[id_server][list_key[i]])
         return stre
 
     def str_stats_perc(self, id_server):
         """Make print str."""
-        list_tup = sorted(self.stats[id_server].items(), reverse=True)
-        max_value = float(sum(x for _, x in list_tup))
+        list_key = sorted(self.stats[id_server], key=self.stats[id_server].get, reverse=True)
+        max_value = float(sum(self.stats[id_server][x] for x in list_key))
         stre = ''
-        for i in range(0, len(list_tup)):
-            stre += str(i + 1) + '. ' + list_tup[i][0] + ' => ' +\
-                    "{0:.2f} %".format((list_tup[i][1] / max_value) * 100)
+        for i in range(0, len(list_key)):
+            stre += '%d. %s => ' % ((i+1), list_key[i]) +\
+                    "{0:.2f} %\n".format((self.stats[id_server][list_key[i]] / max_value) * 100)
         return stre

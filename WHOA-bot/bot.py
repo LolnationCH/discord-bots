@@ -1,6 +1,7 @@
 """WHOAH bot script."""
 import discord
-from authenticate import get_token, RESPONSE_TYPE
+from authenticate import get_token
+from ressource import RESPONSE_TYPE
 from message_parsing import Message_parser
 
 # Create the discord client object

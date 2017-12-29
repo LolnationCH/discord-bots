@@ -4,7 +4,7 @@ import os
 import random
 import msgpack
 
-from authenticate import RESPONSE_TYPE
+from ressource import RESPONSE_TYPE
 
 
 class Quotes(object):

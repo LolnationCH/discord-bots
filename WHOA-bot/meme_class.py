@@ -3,7 +3,8 @@
 import random
 import json
 from os import walk
-from authenticate import RESPONSE_TYPE
+
+from ressource import RESPONSE_TYPE
 
 class Meme(object):
     """Class for getting memes."""

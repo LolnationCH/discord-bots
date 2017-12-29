@@ -2,7 +2,7 @@
 from stats_class import Stats_recorder
 from insults_class import Insults
 import bot_functions as bf
-from authenticate import RESPONSE_TYPE
+from ressource import RESPONSE_TYPE
 
 # CONSTANTS
 COMMAND_PREFIX = 'WHOA'
@@ -60,11 +60,6 @@ class Message_parser(object):
 
     stats_obj = Stats_recorder()
 
-    def __init__(self):
-        """."""
-        # todo
-        return
-
     def parse_message(self, message):
         """Function that parse the message."""
         msg_tup = is_command(message.content)
@@ -82,7 +77,7 @@ class Message_parser(object):
             return bf.parse_commands(msg_tup[1], message.author.mention)
 
         # This is not a command
-        msg = formatted_correctly(message.content)
+        msg = formatted_correctly(message)
         if msg != '':
             return RESPONSE_TYPE['MESSAGE'], msg
 
